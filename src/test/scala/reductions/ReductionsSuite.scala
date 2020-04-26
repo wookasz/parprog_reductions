@@ -18,6 +18,11 @@ class ReductionsSuite {
     assertEquals(List(0f, 1f, 4f, 4f), output.toList)
   }
 
+  @Test def `parLineOfSight should correctly handle an array of size 4`: Unit = {
+    val output = new Array[Float](4)
+    parLineOfSight(Array[Float](0f, 1f, 8f, 9f), output, 2)
+    assertEquals(List(0f, 1f, 4f, 4f), output.toList)
+  }
 
 
 
@@ -26,6 +31,10 @@ class ReductionsSuite {
    *******************************/
 
   import ParallelCountChange._
+
+  @Test def `moneyThreshold is false with starting value 3`: Unit = {
+    assert(moneyThreshold(3)(3, List()), "false")
+  }
 
   @Test def `countChange should return 0 for money < 0`: Unit = {
     def check(money: Int, coins: List[Int]) =
@@ -78,6 +87,15 @@ class ReductionsSuite {
     check(250, List(1, 2, 5, 10, 20, 50), 177863)
   }
 
+  @Test def `parCountChange should work for multi-coins`: Unit = {
+    def check(money: Int, coins: List[Int], expected: Int) =
+      assert(parCountChange(money, coins, moneyThreshold(money)) == expected,
+        s"parCountChange($money, $coins) should be $expected")
+
+    check(50, List(1, 2, 5, 10), 341)
+    check(250, List(1, 2, 5, 10, 20, 50), 177863)
+  }
+
 
   /**********************************
    * PARALLEL PARENTHESES BALANCING *
@@ -117,6 +135,60 @@ class ReductionsSuite {
     check("(.", false)
     check(").", false)
   }
+
+  @Test def `parBalance should work for empty string`: Unit = {
+    def check(input: String, expected: Boolean) =
+      assert(parBalance(input.toArray, 1) == expected,
+        s"parBalance($input) should be $expected")
+
+    check("", true)
+  }
+
+  @Test def `parBalance should work for string of length 1`: Unit = {
+    def check(input: String, expected: Boolean) =
+      assert(parBalance(input.toArray, 1) == expected,
+        s"parBalance($input) should be $expected")
+
+    check("(", false)
+    check(")", false)
+    check(".", true)
+  }
+
+  @Test def `parBalance should work for string of length 2`: Unit = {
+    def check(input: String, expected: Boolean) =
+      assert(parBalance(input.toArray, 1) == expected,
+        s"parBalance($input) should be $expected")
+
+    check("()", true)
+    check(")(", false)
+    check("((", false)
+    check("))", false)
+    check(".)", false)
+    check(".(", false)
+    check("(.", false)
+    check(").", false)
+  }
+
+  @Test def `parBalance should work for longer srings`: Unit = {
+    def check(input: String, expected: Boolean) =
+      assert(parBalance(input.toArray, 2) == expected,
+        s"parBalance($input) should be $expected")
+
+    check("(.).(.)).", false)
+    check(".).(.(.", false)
+    check("(.).((", false)
+    check("))((", false)
+    check(".).)(.(", false)
+    check("(()())", true)
+    check("(...().", false)
+    check("())((().)", false)
+    check("(if (zero? x) max (/ 1 x))", true)
+    check("I told him (that it's not (yet) done). (But he wasn't listening)", true)
+    check("(o_()", false)
+    check(":-)", false)
+    check("())(", false)
+  }
+
 
 
   @Rule def individualTestTimeout = new org.junit.rules.Timeout(10 * 1000)
